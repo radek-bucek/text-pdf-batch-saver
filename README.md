@@ -76,20 +76,15 @@ A task stops with a clear message if a variable resolves to nothing. `/` in a
 value becomes `–` so it is safe in a folder/file name - **except** `url` values,
 which keep their slashes for use inside URL templates.
 
-A typical `[context]` derives a base URL and the parts of the destination folder.
-The variable names are yours - use whatever the task templates reference:
+A typical `[context]` derives a base URL and the parts of the destination folder;
+the variable names are yours. Their roles:
 
-    base       = url ^(https?://[^/]+/).*?(#!?/[^/]+)
-    mainfolder = find \b[A-Z0-9]{10,}\b
-    subfolder1 = match class="crumb"[^>]*>([^<]*)< 1
-    subfolder2 = match class="crumb"[^>]*>([^<]*)< 2
-
-    base         a URL prefix pulled from the tab URL (origin + hash root), so the
-                 tasks' `*_url`s can be written as `{base}/…` and not repeat it.
-    mainfolder   the top destination folder - here an id read from app state.
-    subfolder1   a folder level taken from the page markup (e.g. a breadcrumb);
-    subfolder2   the next level down. A task's `folder` then joins them, e.g.
-                 `folder = {mainfolder}/{subfolder1}/{subfolder2}`.
+    base         a URL prefix taken from the tab URL (via `url`), so a task's
+                 `*_url`s can be written `{base}/…` without repeating the prefix.
+    mainfolder   the top destination folder, e.g. an id found in app state.
+    subfolder1   a deeper folder level read from the page markup (via `match`),
+    subfolder2   and further levels as needed. A task's `folder` template joins
+                 them into the download path.
 
 To force a fixed folder instead of auto-detecting it, set its line to a literal,
 e.g. `mainfolder = value My car`; leave the `find`/`match` source to auto-detect.
@@ -110,7 +105,7 @@ task only. `type =` picks the flow:
     rows_pattern    Regex over the visible page text (flags gm): capture group 1
                     = the document number, group 2 = its title; one match per row.
     document_title  Optional. A source (as in [context]) giving the title on a
-                    document page, e.g.  match class="infoPiece"[^>]*>([^<]+)< 1 .
+                    document page, e.g.  match class="title"[^>]*>([^<]+)< 1 .
                     Used by the current-page task to name a single file.
     annotate        Optional. SELECTOR @attr field [before SELECTOR] - the one
                     selector-based option: for each matching element read the
@@ -135,7 +130,7 @@ when its `counter_pattern` finds a counter) and run the first that matches the
 shown page. One hotkey then serves both kinds of tab, downloading it whole.
 
 **`type = current-page`** - `tasks = name1 name2 …`: like `detect`, but saves
-only the **one** document / plate currently shown. For a `document-list` it reads
+only the **one** document / page currently shown. For a `document-list` it reads
 `{number}` from the current URL and the title from `document_title`; for a
 `numbered-pages` it reads the counter. Names the file from that task's `file`.
 
