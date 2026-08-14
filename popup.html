@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 13px/1.45 system-ui, sans-serif; margin: 0; min-width: 280px; height: 100vh;
+         display: flex; flex-direction: column; background: #fff; color: #202124; }
+  header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #e0e0e0; }
+  header b { flex: 1; }
+  #tasks { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
+  button { font: inherit; padding: 5px 12px; border: 1px solid #dadce0; border-radius: 6px; background: #f8f9fa; cursor: pointer; }
+  button:hover { background: #f1f3f4; }
+  button.run { background: #1a73e8; border-color: #1a73e8; color: #fff; }
+  button.run:hover { background: #1765cc; }
+  button:disabled { opacity: .5; cursor: default; }
+  #stop { background: #d93025; border-color: #d93025; color: #fff; }
+  #status { padding: 0 12px 6px; color: #5f6368; }
+  #log-label { padding: 6px 12px 4px; font-size: 12px; font-weight: 600; color: #5f6368; }
+  #log { flex: 1; min-height: 120px; margin: 0 12px; padding: 8px; overflow: auto; background: #202124; color: #e8eaed; font: 11px/1.5 monospace; white-space: pre-wrap; border-radius: 6px; }
+  #log-bar { padding: 8px 12px 12px; }
+  a { color: #1a73e8; text-decoration: none; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <b>Text PDF Batch Saver</b>
+  <button id="stop" hidden>Stop</button>
+  <a href="#" id="options">Configuration</a>
+</header>
+<div id="tasks"></div>
+<div id="status"></div>
+<div id="log-label">Log</div>
+<pre id="log"></pre>
+<div id="log-bar"><button id="clear" title="Clear the log">Clear log</button></div>
+<script src="popup.js"></script>
+</body>
+</html>

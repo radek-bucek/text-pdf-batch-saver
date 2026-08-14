@@ -1,0 +1,9 @@
+# Local, site-specific configuration - not part of the extension
+config.txt.newdialogsys
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*~
+.idea/
+.vscode/

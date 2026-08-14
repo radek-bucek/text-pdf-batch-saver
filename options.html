@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Text PDF Batch Saver - configuration</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 0; background: #f8f9fa; color: #202124; }
+  main { max-width: 1000px; margin: 0 auto; padding: 18px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.hint { color: #5f6368; margin: 0 0 12px; font-size: 13px; }
+  textarea { width: 100%; height: 55vh; box-sizing: border-box; font: 12px/1.5 monospace; padding: 10px; border: 1px solid #dadce0; border-radius: 8px; background: #fff; resize: vertical; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  button { font: inherit; padding: 7px 16px; border: 1px solid #dadce0; border-radius: 6px; background: #fff; cursor: pointer; }
+  #save { background: #1a73e8; border-color: #1a73e8; color: #fff; }
+  #result { margin-top: 10px; white-space: pre-wrap; font: 12px/1.5 monospace; }
+  #result.ok { color: #188038; }
+  #result.err { color: #d93025; }
+  kbd { background: #eee; border-radius: 4px; padding: 0 5px; }
+  #folders { margin-top: 18px; padding: 14px 16px; border: 1px solid #dadce0; border-radius: 8px; background: #fff; }
+  #folders p { margin: 0 0 10px; font-size: 13px; color: #5f6368; }
+  #folders .row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+  #folders label { width: 110px; color: #202124; }
+  #folders input { flex: 1; font: inherit; padding: 6px 9px; border: 1px solid #dadce0; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Batch configuration</h1>
+  <p class="hint">The site adapter lives here: regexes, URL templates and file-name
+    patterns. All the machinery is generic and built into the extension. Keyboard
+    shortcuts are set per task with <code>hotkey = ctrl+shift+s</code> and work while
+    a web page is focused. Format reference: README.md in the extension folder.</p>
+  <textarea id="text" spellcheck="false"></textarea>
+  <div class="bar">
+    <button id="save">Validate &amp; save</button>
+    <button id="reload">Discard changes</button>
+    <span id="result"></span>
+  </div>
+
+  <div id="folders" hidden>
+    <p>The configuration is empty, so <b>Ctrl+Shift+S</b> just saves the shown
+      page as a text PDF, exactly as it is (no content analysis). Set the
+      destination folders here - a filled field becomes a subfolder, an empty one
+      is skipped. The file name is the page title plus a timestamp.</p>
+    <div class="row"><label for="mainfolder">Main folder</label>
+      <input id="mainfolder" placeholder="auto-detect"></div>
+    <div class="row"><label for="subfolder1">Subfolder 1</label>
+      <input id="subfolder1" placeholder="auto-detect"></div>
+    <div class="row"><label for="subfolder2">Subfolder 2</label>
+      <input id="subfolder2" placeholder="auto-detect"></div>
+  </div>
+</main>
+<script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Text PDF Batch Saver",
+  "version": "1.0.0",
+  "description": "Config-driven batch saver: prints application pages as text PDFs into Downloads subfolders, triggered by keyboard shortcuts. All page analysis is defined in an editable text configuration.",
+  "permissions": ["debugger", "downloads", "storage", "offscreen", "sidePanel", "scripting"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "Text PDF Batch Saver"},
+  "side_panel": {"default_path": "popup.html"},
+  "options_page": "options.html",
+  "content_scripts": [
+    {"matches": ["<all_urls>"], "js": ["hotkeys.js"], "run_at": "document_idle"}
+  ]
+}
