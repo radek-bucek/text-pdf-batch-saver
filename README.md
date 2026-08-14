@@ -60,8 +60,18 @@ value, verbatim.
 
 ### [context]
 
-Each line defines one variable, usable as `{name}` in any template below. The
-value is one abstract source:
+Each line is `name = SOURCE` and defines a variable you reference as `{name}` in
+any URL, folder, or file template below. The names are yours; a typical setup
+names a base URL and the parts of the destination folder:
+
+    base         a URL prefix (the site root) so a task's `*_url`s can be written
+                 `{base}/…` and not repeat it.
+    mainfolder   the top folder the files are saved into.
+    subfolder1   a folder level inside it,
+    subfolder2   and further levels as needed - a task's `folder` template joins
+                 them into the download path.
+
+The value after `=` says how each variable is filled - one of four sources:
 
     find REGEX      First match of the regex in web-storage values, then (if
                     none) in the visible page text. For ids kept in app state.
@@ -72,22 +82,10 @@ value is one abstract source:
                     origin + hash root - so task URLs need not repeat the prefix.
     value TEXT      The literal text, exactly as typed.
 
-A task stops with a clear message if a variable resolves to nothing. `/` in a
-value becomes `–` so it is safe in a folder/file name - **except** `url` values,
-which keep their slashes for use inside URL templates.
-
-A typical `[context]` derives a base URL and the parts of the destination folder;
-the variable names are yours. Their roles:
-
-    base         a URL prefix taken from the tab URL (via `url`), so a task's
-                 `*_url`s can be written `{base}/…` without repeating the prefix.
-    mainfolder   the top destination folder, e.g. an id found in app state.
-    subfolder1   a deeper folder level read from the page markup (via `match`),
-    subfolder2   and further levels as needed. A task's `folder` template joins
-                 them into the download path.
-
-To force a fixed folder instead of auto-detecting it, set its line to a literal,
-e.g. `mainfolder = value My car`; leave the `find`/`match` source to auto-detect.
+`/` in a value becomes `–` so it is safe in a folder/file name - **except** `url`
+values, which keep their slashes for use inside URL templates. A task stops with a
+clear message if a variable resolves to nothing. To pin a fixed value instead of
+auto-detecting it, use `value`, e.g. `mainfolder = value My car`.
 
 ### [task:NAME]
 
