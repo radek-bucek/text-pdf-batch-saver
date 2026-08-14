@@ -76,6 +76,21 @@ A task stops with a clear message if a variable resolves to nothing. `/` in a
 value becomes `–` so it is safe in a folder/file name - **except** `url` values,
 which keep their slashes for use inside URL templates.
 
+A typical `[context]` derives a base URL and the parts of the destination folder.
+The variable names are yours - use whatever the task templates reference:
+
+    base       = url ^(https?://[^/]+/).*?(#!?/[^/]+)
+    mainfolder = find \b[A-Z0-9]{10,}\b
+    subfolder1 = match class="crumb"[^>]*>([^<]*)< 1
+    subfolder2 = match class="crumb"[^>]*>([^<]*)< 2
+
+    base         a URL prefix pulled from the tab URL (origin + hash root), so the
+                 tasks' `*_url`s can be written as `{base}/…` and not repeat it.
+    mainfolder   the top destination folder - here an id read from app state.
+    subfolder1   a folder level taken from the page markup (e.g. a breadcrumb);
+    subfolder2   the next level down. A task's `folder` then joins them, e.g.
+                 `folder = {mainfolder}/{subfolder1}/{subfolder2}`.
+
 To force a fixed folder instead of auto-detecting it, set its line to a literal,
 e.g. `mainfolder = value My car`; leave the `find`/`match` source to auto-detect.
 
@@ -102,7 +117,8 @@ task only. `type =` picks the flow:
                     JSON array in @attr, collect the field values and append
                     " [A, B]" into the page before printing (a regex cannot
                     insert into the DOM).
-    folder / file   Destination path templates (see Placeholders).
+    folder          Destination folder template (see Placeholders).
+    file            Destination file-name template (see Placeholders).
 
 **`type = numbered-pages`** - walk pages counted by a "current / total" counter:
 
@@ -110,7 +126,8 @@ task only. `type =` picks the flow:
     counter_pattern  Regex over the visible page text: capture group 1 = current
                      page, group 2 = total; the first match with group1 <= group2
                      wins (so a longer "1345 / 108210" label is skipped).
-    folder / file    Destination path templates (see Placeholders).
+    folder           Destination folder template (see Placeholders).
+    file             Destination file-name template (see Placeholders).
 
 **`type = detect`** - `tasks = name1 name2 …`: probe the listed tasks in order (a
 `document-list` matches when its `rows_pattern` finds rows; a `numbered-pages`
