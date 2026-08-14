@@ -52,7 +52,7 @@ value, verbatim.
 ### [settings]
 
     viewport        Window-size override "WIDTHxHEIGHT@SCALE" applied while a task
-                    runs, e.g. 1510x1300@1.25. Omit to use the window as it is.
+                    runs, e.g. 1500x1300@1. Omit to use the window as it is.
     print_options   JSON passed to Chrome's print-to-PDF. Omit for A4 portrait
                     with no header or footer.
     conflict        What to do when the target file already exists: overwrite
