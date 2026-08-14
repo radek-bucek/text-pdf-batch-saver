@@ -1,9 +1,0 @@
-# Local, site-specific configuration - not part of the extension
-config.txt.*
-
-# OS / editor junk
-.DS_Store
-Thumbs.db
-*~
-.idea/
-.vscode/
