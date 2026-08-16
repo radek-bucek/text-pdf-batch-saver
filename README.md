@@ -100,8 +100,9 @@ task only. `type =` picks the flow:
     document_url    URL of one document, with {number} filled in. It is also
                     matched back against the current URL to read {number} out
                     (used by the current-page task).
-    rows_pattern    Regex over the visible page text (flags gm): capture group 1
-                    = the document number, group 2 = its title; one match per row.
+    rows_pattern    Regex over the visible page text (flags gm): the named groups
+                    (?<number>…) and (?<title>…) mark the document number and its
+                    title; one match per row.
     document_title  Optional. A source (as in [context]) giving the title on a
                     document page, e.g.  match class="title"[^>]*>([^<]+)< 1 .
                     Used by the current-page task to name a single file.
@@ -116,9 +117,9 @@ task only. `type =` picks the flow:
 **`type = numbered-pages`** - walk pages counted by a "current / total" counter:
 
     page_url         URL of one page, with {index0} = the 0-based page number.
-    counter_pattern  Regex over the visible page text: capture group 1 = current
-                     page, group 2 = total; the first match with group1 <= group2
-                     wins (so a longer "1345 / 108210" label is skipped).
+    counter_pattern  Regex over the visible page text with named groups: (?<index>…)
+                     = current page, (?<total>…) = total; the first match with index
+                     <= total wins (so a longer "1345 / 108210" label is skipped).
     folder           Destination folder template (see Placeholders).
     file             Destination file-name template (see Placeholders).
 

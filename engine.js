@@ -50,7 +50,8 @@ const OPS = {
     const out = [];
     let m;
     while ((m = re.exec(text)) && out.length < 10000) {
-      out.push({number: (m[1] || '').trim(), title: safe(m[2])});
+      out.push({number: ((m.groups && m.groups.number) || '').trim(),
+                title: safe(m.groups && m.groups.title)});
       if (m.index === re.lastIndex) re.lastIndex++;
     }
     return out.filter(r => r.number);
@@ -64,7 +65,7 @@ const OPS = {
         const re = new RegExp(counterPattern, 'g');
         let m;
         while ((m = re.exec(text))) {
-          const a = Number(m[1]), b = Number(m[2]);
+          const g = m.groups || {}, a = Number(g.index), b = Number(g.total);
           if (Number.isFinite(a) && Number.isFinite(b) && a <= b) {
             counterIndex = a;
             counterTotal = b;
@@ -196,9 +197,15 @@ function parseSource(value) {
                   + '(use: find REGEX / match REGEX N / url REGEX / value LITERAL)');
 }
 
-function groupCount(pattern) {
-  return new RegExp(pattern + '|').exec('').length - 1;
+// Named capture groups present in a pattern, e.g. "(?<number>...)" -> ["number"].
+// A task's regex names which group is which, so the mapping is explicit in the
+// configuration instead of being a positional convention hidden in the code.
+function namedGroups(pattern) {
+  return [...pattern.matchAll(/\(\?<([A-Za-z]\w*)>/g)].map(m => m[1]);
 }
+
+// The named groups each regex key must define.
+const NAMED_GROUPS = {rows_pattern: ['number', 'title'], counter_pattern: ['index', 'total']};
 
 const TYPES = {
   'document-list': {
@@ -243,14 +250,14 @@ function validateConfig(text) {
           errors.push(`[task:${task.name}] ${key}: unknown placeholder {${m[1]}} `
                       + `(allowed: ${allowed.join(', ') || 'none'})`);
     }
-    for (const key of ['rows_pattern', 'counter_pattern']) {
+    for (const [key, need] of Object.entries(NAMED_GROUPS)) {
       if (task.keys[key] === undefined) continue;
-      try {
-        if (groupCount(task.keys[key]) < 2)
-          errors.push(`[task:${task.name}] ${key} needs two capture groups`);
-      } catch (e) {
-        errors.push(`[task:${task.name}] ${key} is not a valid regex`);
-      }
+      let names;
+      try { new RegExp(task.keys[key]); names = namedGroups(task.keys[key]); }
+      catch (e) { errors.push(`[task:${task.name}] ${key} is not a valid regex`); continue; }
+      if (need.some(n => !names.includes(n)))
+        errors.push(`[task:${task.name}] ${key} must define named groups `
+                    + need.map(n => `(?<${n}>…)`).join(' and '));
     }
     if (task.keys.annotate !== undefined) {
       try { parseAnnotate(task.keys.annotate); }
@@ -570,6 +577,6 @@ const TYPE_RUNNERS = {
 if (typeof module !== 'undefined') {
   module.exports = {parseConfig, validateConfig, parseSource, parseHotkey, render,
                     sanitizePath, padWidth, pad, parseAnnotate,
-                    groupCount, getContext, waitSettled, urlToRegex, runDocumentList,
+                    namedGroups, getContext, waitSettled, urlToRegex, runDocumentList,
                     runNumberedPages, runDetect, runCurrentPage, TYPE_RUNNERS, OPS};
 }
