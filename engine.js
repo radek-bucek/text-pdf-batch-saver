@@ -211,11 +211,11 @@ const TYPES = {
   'document-list': {
     required: ['list_url', 'document_url', 'rows_pattern', 'folder', 'file'],
     vars: {list_url: [], document_url: ['number'], folder: [],
-           file: ['number', 'title', 'index', 'count']},
+           file: ['number', 'title', 'index', 'total']},
   },
   'numbered-pages': {
     required: ['page_url', 'counter_pattern', 'folder', 'file'],
-    vars: {page_url: ['index0', 'index', 'count'], folder: [], file: ['index', 'count']},
+    vars: {page_url: ['index_from0', 'index', 'total'], folder: [], file: ['index', 'total']},
   },
   'detect': {required: ['tasks'], vars: {}},
   'current-page': {required: ['tasks'], vars: {}},
@@ -431,7 +431,7 @@ async function runDocumentList(task, cfg, io) {
       await io.sleep(500);
     }
     const vars = {...ctx, number: doc.number, title: doc.title,
-                  index: pad(i + 1, rows.length), count: pad(rows.length, rows.length)};
+                  index: pad(i + 1, rows.length), total: pad(rows.length, rows.length)};
     await io.print(sanitizePath(folder + '/' + render(s.file, vars)));
   }
   await io.navigate(render(s.list_url, ctx));
@@ -458,8 +458,8 @@ async function runNumberedPages(task, cfg, io) {
     if (io.shouldAbort()) throw new Error('stopped by user');
     io.log(`[${i}/${total}] page ${i}`);
     await io.navigate(render(s.page_url,
-                             {...ctx, index0: i - 1, index: pad(i, total),
-                              count: pad(total, total)}));
+                             {...ctx, index_from0: i - 1, index: pad(i, total),
+                              total: pad(total, total)}));
     await io.sleep(500);
     await io.reload();
     await waitSettled(io, {
@@ -474,7 +474,7 @@ async function runNumberedPages(task, cfg, io) {
     await io.sleep(800);
     await io.op('scrollTo', 0);
     await io.sleep(600);
-    const vars = {...ctx, index: pad(i, total), count: pad(total, total)};
+    const vars = {...ctx, index: pad(i, total), total: pad(total, total)};
     await io.print(sanitizePath(folder + '/' + render(s.file, vars)));
   }
 }
@@ -490,7 +490,7 @@ function urlToRegex(template, ctx, captureName) {
     const name = m[1];
     if (name === captureName) { re += '([^/]+)'; has = true; }
     else if (name in ctx) re += esc(ctx[name]);
-    else re += (name === 'index0' ? '\\d+' : '[^/]+');
+    else re += (name === 'index_from0' ? '\\d+' : '[^/]+');
     last = m.index + m[0].length;
   }
   re += esc(template.slice(last));
@@ -528,7 +528,7 @@ async function runCurrentPage(task, cfg, io) {
       let title = t.keys.document_title ? await extractSource(io, t.keys.document_title) : '';
       title = String(title).replace(/\//g, '–').trim();
       io.log(`current: ${name} ${number} ${title}`.trim());
-      const vars = {...ctx, number, title, index: '1', count: '1'};
+      const vars = {...ctx, number, title, index: '1', total: '1'};
       await io.print(sanitizePath(render(t.keys.folder, ctx) + '/' + render(t.keys.file, vars)));
       return;
     }
@@ -537,7 +537,7 @@ async function runCurrentPage(task, cfg, io) {
       if (st.counterIndex === null || !st.counterTotal) continue;
       io.log(`current: ${name} page ${st.counterIndex}/${st.counterTotal}`);
       const vars = {...ctx, index: pad(st.counterIndex, st.counterTotal),
-                    count: pad(st.counterTotal, st.counterTotal)};
+                    total: pad(st.counterTotal, st.counterTotal)};
       await io.print(sanitizePath(render(t.keys.folder, ctx) + '/' + render(t.keys.file, vars)));
       return;
     }

@@ -116,7 +116,7 @@ task only. `type =` picks the flow:
 
 **`type = numbered-pages`** - walk pages counted by a "current / total" counter:
 
-    page_url         URL of one page, with {index0} = the 0-based page number.
+    page_url         URL of one page, with {index_from0} = the 0-based page number.
     counter_pattern  Regex over the visible page text with named groups: (?<index>…)
                      = current page, (?<total>…) = total; the first match with index
                      <= total wins (so a longer "1345 / 108210" label is skipped).
@@ -138,9 +138,9 @@ only the **one** document / page currently shown. For a `document-list` it reads
 Any `[context]` variable, plus per flow:
 
     {number} {title}   document-list: from the row (or from the current page)
-    {index} {count}    both flows: position and total, zero-padded to
+    {index} {total}    both flows: position and total, zero-padded to
                        max(2, digits(total)) - e.g. 03 and 13
-    {index0}           numbered-pages URLs: the 0-based page number
+    {index_from0}      numbered-pages URLs: the 0-based page number
 
 Folders in a path are created automatically under Downloads.
 
