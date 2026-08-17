@@ -71,10 +71,13 @@ names a base URL and the parts of the destination folder:
     subfolder2   and further levels as needed - a task's `folder` template joins
                  them into the download path.
 
-The value after `=` says how each variable is filled - one of four sources:
+The value after `=` says how each variable is filled - one of five sources:
 
     find REGEX      First match of the regex in web-storage values, then (if
                     none) in the visible page text. For ids kept in app state.
+    text REGEX      First match of the regex in the visible page text only (no
+                    web storage); capture group 1, or the whole match. For a
+                    number shown on the page, like a "3 / 12" counter.
     match REGEX N   The N-th match of the regex in the page HTML; its capture
                     group 1 (or the whole match) is the value. For text in markup.
     url REGEX       The regex run on the current tab URL; capture groups are
@@ -94,18 +97,28 @@ joined with `+` and one key (a letter, a digit, or `f1`-`f12`), e.g. `ctrl+shift
 or `alt+f2`. At least `ctrl`/`alt`/`meta` is required; each combo is used by one
 task only. `type =` picks the flow:
 
+**`type = current-page`** - save the single page currently shown; its parts are
+read straight from the URL and page content, with no navigation:
+
+    when     Optional. A source (as in [context]); under detect it decides
+             whether this task applies to the shown page.
+    <field>  Any key other than type / when / folder / file / hotkey / annotate
+             is a field: its value is a source (as in [context]) and becomes a
+             {name} placeholder for folder and file.
+    annotate Optional. As in document-list: inject a list into the page before
+             printing, so cross-references show up in the saved PDF.
+    folder   Destination folder template (see Placeholders).
+    file     Destination file-name template (see Placeholders).
+
 **`type = document-list`** - read a list from the page, walk each document by URL:
 
+    when            Optional. A source (as in [context]); under detect it decides
+                    whether this task applies (else: rows_pattern found rows).
     list_url        URL of the list; the run returns here when finished.
-    document_url    URL of one document, with {number} filled in. It is also
-                    matched back against the current URL to read {number} out
-                    (used by the current-page task).
+    document_url    URL of one document, with {number} filled in.
     rows_pattern    Regex over the visible page text (flags gm): the named groups
                     (?<number>…) and (?<title>…) mark the document number and its
                     title; one match per row.
-    document_title  Optional. A source (as in [context]) giving the title on a
-                    document page, e.g.  match class="title"[^>]*>([^<]+)< 1 .
-                    Used by the current-page task to name a single file.
     annotate        Optional. SELECTOR @attr field [before SELECTOR] - the one
                     selector-based option: for each matching element read the
                     JSON array in @attr, collect the field values and append
@@ -116,6 +129,8 @@ task only. `type =` picks the flow:
 
 **`type = numbered-pages`** - walk pages counted by a "current / total" counter:
 
+    when             Optional. A source (as in [context]); under detect it decides
+                     whether this task applies (else: counter_pattern found a counter).
     page_url         URL of one page, with {index_from0} = the 0-based page number.
     counter_pattern  Regex over the visible page text with named groups: (?<index>…)
                      = current page, (?<total>…) = total; the first match with index
@@ -123,23 +138,33 @@ task only. `type =` picks the flow:
     folder           Destination folder template (see Placeholders).
     file             Destination file-name template (see Placeholders).
 
-**`type = detect`** - `tasks = name1 name2 …`: probe the listed tasks in order (a
-`document-list` matches when its `rows_pattern` finds rows; a `numbered-pages`
-when its `counter_pattern` finds a counter) and run the first that matches the
-shown page. One hotkey then serves both kinds of tab, downloading it whole.
+**`type = detect`** - one hotkey that runs whichever listed task fits the shown page:
 
-**`type = current-page`** - `tasks = name1 name2 …`: like `detect`, but saves
-only the **one** document / page currently shown. For a `document-list` it reads
-`{number}` from the current URL and the title from `document_title`; for a
-`numbered-pages` it reads the counter. Names the file from that task's `file`.
+    tasks    Space-separated task names, tried in order; the first that applies
+             runs (in its own mode). A task applies when its when matches; without
+             when the built-in signal is used (document-list = rows_pattern finds
+             rows, numbered-pages = counter_pattern finds a counter, current-page
+             = always).
+
+**`type = capture`** - read fields from the shown page and remember them
+persistently, downloading nothing; a later save reuses them as placeholders:
+
+    when     Optional. If present, the capture runs automatically on every page
+             that matches (no hotkey needed). A capture needs a hotkey or a when.
+    <field>  Any key other than type / when / hotkey is a field: its value is a
+             source (as in [context]), remembered under {name} and usable in any
+             task's folder / file until re-captured.
 
 ### Placeholders
 
-Any `[context]` variable, plus per flow:
+Placeholders for `folder`, `file` and URL templates:
 
-    {number} {title}   document-list: from the row (or from the current page)
-    {index} {total}    both flows: position and total, zero-padded to
-                       max(2, digits(total)) - e.g. 03 and 13
+    (context)          any [context] variable - in every task
+    (fields)           a current-page task's own fields
+    (captured)         values a capture task last remembered
+    {number} {title}   document-list: from the matched row
+    {index} {total}    document-list / numbered-pages: position and total,
+                       zero-padded to max(2, digits(total)) - e.g. 03 and 13
     {index_from0}      numbered-pages URLs: the 0-based page number
 
 Folders in a path are created automatically under Downloads.

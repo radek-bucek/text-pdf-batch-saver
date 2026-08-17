@@ -134,6 +134,11 @@ function makeDebuggerIO(tabId, cfg) {
       try { await send('Emulation.clearDeviceMetricsOverride'); } catch (e) {}
       try { await chrome.debugger.detach(target); } catch (e) {}
     },
+    loadCaptured: async () => (await chrome.storage.local.get('captured')).captured || {},
+    saveCaptured: async obj => {
+      const cur = (await chrome.storage.local.get('captured')).captured || {};
+      await chrome.storage.local.set({captured: {...cur, ...obj}});
+    },
   };
   return io;
 }
@@ -203,8 +208,11 @@ function hotkeyMapOf(cfg) {
 
 async function refreshHotkeyMap() {
   const text = await getConfigText();
-  const map = text.trim() ? hotkeyMapOf(validateConfig(text)) : {};
-  await chrome.storage.local.set({hotkeyMap: map});
+  const cfg = text.trim() ? validateConfig(text) : null;
+  await chrome.storage.local.set({
+    hotkeyMap: cfg ? hotkeyMapOf(cfg) : {},
+    autoCapture: cfg ? autoCaptureOf(cfg) : [],
+  });
 }
 
 // The content script cannot inject itself into tabs that were already open when
@@ -267,9 +275,10 @@ async function builtinSave(tabId) {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (!msg || (msg.type !== 'hotkey' && msg.type !== 'builtin-save')) return false;
+  if (!msg || (msg.type !== 'hotkey' && msg.type !== 'builtin-save' && msg.type !== 'log')) return false;
   const tabId = sender.tab && sender.tab.id;
   if (msg.type === 'hotkey') runTaskByName(msg.task, tabId);
+  else if (msg.type === 'log') logLine(msg.text);
   else builtinSave(tabId);
   sendResponse({ok: true});
   return false;
@@ -308,7 +317,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       case 'ui-config-set': {
         const v = validateConfig(msg.text);
         if (v.errors.length) { sendResponse({ok: false, errors: v.errors}); break; }
-        await chrome.storage.local.set({configText: msg.text, hotkeyMap: hotkeyMapOf(v)});
+        await chrome.storage.local.set({configText: msg.text, hotkeyMap: hotkeyMapOf(v),
+                                        autoCapture: autoCaptureOf(v)});
         sendResponse({ok: true, tasks: v.tasks.map(t => t.name)});
         break;
       }
