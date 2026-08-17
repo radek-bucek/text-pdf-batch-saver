@@ -278,7 +278,7 @@ function validateConfig(text) {
       const allowed = [...fields, ...ctxNames, ...capturedNames];
       for (const key of ['folder', 'file']) {
         if (task.keys[key] === undefined) continue;
-        for (const m of task.keys[key].matchAll(/\{(\w+)\}/g))
+        for (const m of task.keys[key].matchAll(/\{(\w+)(?::\d+)?\}/g))
           if (!allowed.includes(m[1]))
             errors.push(`[task:${task.name}] ${key}: unknown placeholder {${m[1]}} `
                         + `(allowed: ${allowed.join(', ') || 'none'})`);
@@ -299,7 +299,7 @@ function validateConfig(text) {
       for (const [key, flowVars] of Object.entries(spec.vars)) {
         if (task.keys[key] === undefined) continue;
         const allowed = [...flowVars, ...ctxNames, ...capturedNames];
-        for (const m of task.keys[key].matchAll(/\{(\w+)\}/g))
+        for (const m of task.keys[key].matchAll(/\{(\w+)(?::\d+)?\}/g))
           if (!allowed.includes(m[1]))
             errors.push(`[task:${task.name}] ${key}: unknown placeholder {${m[1]}} `
                         + `(allowed: ${allowed.join(', ') || 'none'})`);
@@ -350,9 +350,10 @@ function validateConfig(text) {
 }
 
 function render(tpl, vars) {
-  return tpl.replace(/\{(\w+)\}/g, (_, name) => {
+  return tpl.replace(/\{(\w+)(?::(\d+))?\}/g, (_, name, width) => {
     if (!(name in vars)) throw new Error(`unknown placeholder {${name}}`);
-    return String(vars[name]);
+    const s = String(vars[name]);
+    return width ? s.padStart(Number(width), '0') : s;
   });
 }
 
@@ -368,14 +369,6 @@ function sanitizePath(path, aggressive = false) {
   }
   if (!out.length) throw new Error('empty file path');
   return out.join('/');
-}
-
-function padWidth(count) {
-  return Math.max(2, String(count).length);
-}
-
-function pad(n, count) {
-  return String(n).padStart(padWidth(count), '0');
 }
 
 function parseAnnotate(value) {
@@ -487,7 +480,7 @@ async function runDocumentList(task, cfg, io) {
       await io.sleep(500);
     }
     const vars = {...ctx, number: doc.number, title: doc.title,
-                  index: pad(i + 1, rows.length), total: pad(rows.length, rows.length)};
+                  index: i + 1, total: rows.length};
     await io.print(sanitizePath(folder + '/' + render(s.file, vars)));
   }
   await io.navigate(render(s.list_url, ctx));
@@ -514,8 +507,7 @@ async function runNumberedPages(task, cfg, io) {
     if (io.shouldAbort()) throw new Error('stopped by user');
     io.log(`[${i}/${total}] page ${i}`);
     await io.navigate(render(s.page_url,
-                             {...ctx, index_from0: i - 1, index: pad(i, total),
-                              total: pad(total, total)}));
+                             {...ctx, index_from0: i - 1, index: i, total}));
     await io.sleep(500);
     await io.reload();
     await waitSettled(io, {
@@ -530,7 +522,7 @@ async function runNumberedPages(task, cfg, io) {
     await io.sleep(800);
     await io.op('scrollTo', 0);
     await io.sleep(600);
-    const vars = {...ctx, index: pad(i, total), total: pad(total, total)};
+    const vars = {...ctx, index: i, total};
     await io.print(sanitizePath(folder + '/' + render(s.file, vars)));
   }
 }
@@ -541,7 +533,7 @@ async function runNumberedPages(task, cfg, io) {
 function urlToRegex(template, ctx, captureName) {
   const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   let re = '', last = 0, has = false;
-  for (const m of template.matchAll(/\{(\w+)\}/g)) {
+  for (const m of template.matchAll(/\{(\w+)(?::\d+)?\}/g)) {
     re += esc(template.slice(last, m.index));
     const name = m[1];
     if (name === captureName) { re += '([^/]+)'; has = true; }
@@ -591,7 +583,7 @@ async function runCurrentPage(task, cfg, io) {
     if (!v) throw new Error(`field "${key}" is empty (source: ${val})`);
     vars[key] = v;
   }
-  for (const m of (s.folder + ' ' + s.file).matchAll(/\{(\w+)\}/g))
+  for (const m of (s.folder + ' ' + s.file).matchAll(/\{(\w+)(?::\d+)?\}/g))
     if (!(m[1] in vars) && (cfg.capturedNames || []).includes(m[1]))
       throw new Error(`"{${m[1]}}" was not captured yet - run the capture task first`);
   io.log(`current: ${task.name} -> ${render(s.file, vars)}`);
@@ -668,7 +660,7 @@ const TYPE_RUNNERS = {
 
 if (typeof module !== 'undefined') {
   module.exports = {parseConfig, validateConfig, parseSource, parseHotkey, render,
-                    sanitizePath, padWidth, pad, parseAnnotate,
+                    sanitizePath, parseAnnotate,
                     namedGroups, getContext, waitSettled, urlToRegex, runDocumentList,
                     runNumberedPages, runDetect, runCurrentPage, runCapture, taskApplies,
                     autoCaptureOf, TYPE_RUNNERS, OPS};

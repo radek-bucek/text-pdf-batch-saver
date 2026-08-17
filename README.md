@@ -163,9 +163,12 @@ Placeholders for `folder`, `file` and URL templates:
     (fields)           a current-page task's own fields
     (captured)         values a capture task last remembered
     {number} {title}   document-list: from the matched row
-    {index} {total}    document-list / numbered-pages: position and total,
-                       zero-padded to max(2, digits(total)) - e.g. 03 and 13
+    {index} {total}    document-list / numbered-pages: position and total, as
+                       plain numbers - zero-pad them with {index:02} (see below)
     {index_from0}      numbered-pages URLs: the 0-based page number
+
+Any placeholder can be zero-padded to a fixed width with `{name:0N}` - e.g.
+`{index:02}` or `{position:02}` renders `1` as `01`, `12` stays `12`.
 
 Folders in a path are created automatically under Downloads.
 
